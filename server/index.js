@@ -1,41 +1,41 @@
 const OpenAI = require("openai");
 const express = require("express");
-const multer = require("multer");
 const path = require("path");
-const cors = require("cors");
-const fs = require("fs");
+//const fs
+const multer = require("multer");
 const app = express();
-const PORT = 4000;
+const cors = require("cors");
+//const nodemailer = require('nodemailer');
+const PORT = 8000;
 
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static("uploads"));
+app.use("/imageFiles", express.static("imageFiles"));
 app.use(express.json());
 app.use(cors());
 
-const generateID = () => Math.random().toString(36).substring(2, 10);
+const createID = () => Math.random().toString(36).substring(2, 10);
 
 const storage = multer.diskStorage({
 	destination: (req, file, cb) => {
-		cb(null, "uploads");
+		cb(null, "imageFiles");
 	},
 	filename: (req, file, cb) => {
 		cb(null, Date.now() + path.extname(file.originalname));
 	},
 });
-
 const upload = multer({
 	storage: storage,
 	limits: { fileSize: 1024 * 1024 * 5 },
 });
-
-
 const openai = new OpenAI({
 	apiKey: "sk-proj-Prk80rDe3V21jSGCVv05T3BlbkFJ10VWX0goFHA6ZeyhXK87",
 });
 
-const database = [];
 
-const ChatGPTFunction = async (text) => {
+
+const fileDatabase = [];
+
+const generateChatgptResponse = async (text) => {
 	const response = await openai.chat.completions.create({
 		model: "gpt-3.5-turbo", 
 		max_tokens: 150,
@@ -55,58 +55,64 @@ const ChatGPTFunction = async (text) => {
 	return response.choices[0].message;
 };
 
-app.post("/resume/create", upload.single("headshotImage"), async (req, res) => {
+app.post("/resume/create", upload.single("passportsizeImage"), async (req, res) => {
 	const {
-		fullName,
-		currentPosition,
-		currentLength,
-		currentTechnologies,
-		workHistory,
+		userName,
+		presentRole,
+		tenure,
+		technologies,
+		jobHistory,
 	} = req.body;
 
-	const workArray = JSON.parse(workHistory);
+	const jobArray = JSON.parse(jobHistory);
+	//photo upload 
 	const newEntry = {
-		id: generateID(),
-		fullName,
-		image_url: `http://localhost:4000/uploads/${req.file.filename}`,
-		currentPosition,
-		currentLength,
-		currentTechnologies,
-		workHistory: workArray,
+		id: createID(),
+		userName,
+		photourl: `http://localhost:8000/imageFiles/${req.file.filename}`,
+		presentRole,
+		tenure,
+		technologies,
+		jobHistory: jobArray,
 	};
+//const userText1='make a resume, with my details-${userName}\n role:
+	const userText1 = `I am making a resume, my details are \n name: ${userName} \n role: ${presentRole} (${tenure} years). \n i am proficient in technologies :  ${technologies}. write a 100 words description for the top of my resume introduction(first person writing)?`;
+//const userText2='make a resume, with my details-${userName}\n role:
+	const userText2 = `I am making a resume, my details are\n name: ${userName} \n role: ${presentRole} (${tenure} years). \n i am proficient in technlogies: ${technologies}. Can you write 10 points for the resume stating i am good at these?`;
 
-	const prompt1 = `I am writing a resume, my details are \n name: ${fullName} \n role: ${currentPosition} (${currentLength} years). \n I write in the technolegies: ${currentTechnologies}. Can you write a 100 words description for the top of the resume(first person writing)?`;
-
-	const prompt2 = `I am writing a resume, my details are \n name: ${fullName} \n role: ${currentPosition} (${currentLength} years). \n I write in the technolegies: ${currentTechnologies}. Can you write 10 points for a resume on what I am good at?`;
-
-	const remainderText = () => {
-		let stringText = "";
-		for (let i = 0; i < workArray.length; i++) {
-			stringText += ` ${workArray[i].name} as a ${workArray[i].position}.`;
+	const additionalText = () => {
+		let simpleText = "";
+		for (let i = 0; i < jobArray.length; i++) {
+			simpleText += ` ${jobArray[i].name} as a ${jobArray[i].position}.`;
 		}
-		return stringText;
+		return simpleText;
 	};
 
-	const prompt3 = `I am writing a resume, my details are \n name: ${fullName} \n role: ${currentPosition} (${currentLength} years). \n During my years I worked at ${
-		workArray.length
-	} companies. ${remainderText()} \n Can you write me 50 words for each company seperated in numbers of my succession in the company (in first person)?`;
-
-	const objectiveR = await ChatGPTFunction(prompt1);
-	const keypointsR = await ChatGPTFunction(prompt2);
-	const jobResponsibilitiesR = await ChatGPTFunction(prompt3);
-	const objective=objectiveR.content
-	const keypoints=keypointsR.content
-	const jobResponsibilities=jobResponsibilitiesR.content
-	const chatgptData = { objective, keypoints, jobResponsibilities };
+	const userText3 = `I am making a resume, my details are  \n name: ${userName} \n role: ${presentRole} (${tenure} years). \n  during my tenure I worked at ${
+		jobArray.length
+	} companies. ${additionalText()} \n Please write 50 words about each company, listing them in the order of my career and using "I" to describe my roles?`;
+	console.log("userText1",userText1)
+	console.log("userText2",userText2)
+	console.log("userText3",userText3)
+	const textOjectR = await generateChatgptResponse(userText1);
+	const notablesR = await generateChatgptResponse(userText2);
+	console.log(notablesR)
+	const workDutiesR = await generateChatgptResponse(userText3);
+	const textOject=textOjectR.content
+	const notables=notablesR.content
+	console.log(notables)
+	const workDuties=workDutiesR.content
+	const chatgptData = { textOject, notables, workDuties };
 	const data = { ...newEntry, ...chatgptData };
-	database.push(data);
+	fileDatabase.push(data);
+	console.log("data",data)
 
 	res.json({
-		message: "Request successful!",
+		message: "Request success",
 		data,
 	});
 });
 
 app.listen(PORT, () => {
-	console.log(`Server listening on ${PORT}`);
+	console.log(`Server is listening on ${PORT}`);
 });

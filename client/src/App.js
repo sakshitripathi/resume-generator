@@ -1,17 +1,18 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./components/Home";
-import Resume from "./components/Resume";
+import Main from "./components/Main";
+import AiResume from "./components/AiResume";
 
 const App = () => {
-	const [result, setResult] = useState({});
+	const [jobresponse, setResult] = useState({});
 
 	return (
 		<div>
 			<BrowserRouter>
 				<Routes>
-					<Route path='/' element={<Home setResult={setResult} />} />
-					<Route path='/resume' element={<Resume result={result} />} />
+					<Route path='/' element={<Main setResult={setResult} />} />
+					<></>
+					<Route path='/resume' element={<AiResume jobresponse={jobresponse} />} />
 				</Routes>
 			</BrowserRouter>
 		</div>
