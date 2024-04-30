@@ -27,8 +27,9 @@ const upload = multer({
 	storage: storage,
 	limits: { fileSize: 1024 * 1024 * 5 },
 });
+//new key
 const openai = new OpenAI({
-	apiKey: "sk-proj-Prk80rDe3V21jSGCVv05T3BlbkFJ10VWX0goFHA6ZeyhXK87",
+	apiKey: <>,
 });
 
 
@@ -55,7 +56,7 @@ const generateChatgptResponse = async (text) => {
 	return response.choices[0].message;
 };
 
-app.post("/resume/create", upload.single("passportsizeImage"), async (req, res) => {
+app.post("/build/resume", upload.single("passportsizeImage"), async (req, res) => {
 	const {
 		userName,
 		presentRole,

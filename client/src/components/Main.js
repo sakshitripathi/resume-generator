@@ -40,11 +40,11 @@ const Main = ({ setResult }) => {
 		newFormInfo.append("technologies", technologies);
 		newFormInfo.append("jobHistory", JSON.stringify(companies));
 		axios
-			.post("http://localhost:8000/resume/create", newFormInfo, {})
+			.post("http://localhost:8000/build/resume", newFormInfo, {})
 			.then((res) => {
 				if (res.data.message) {
 					setResult(res.data.data);
-					resumeNav("/resume");
+					resumeNav("/build");
 				}
 			})
 			.catch((err) => console.error(err));

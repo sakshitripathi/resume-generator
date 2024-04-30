@@ -12,7 +12,7 @@ const App = () => {
 				<Routes>
 					<Route path='/' element={<Main setResult={setResult} />} />
 					<></>
-					<Route path='/resume' element={<AiResume jobresponse={jobresponse} />} />
+					<Route path='/build' element={<AiResume jobresponse={jobresponse} />} />
 				</Routes>
 			</BrowserRouter>
 		</div>
